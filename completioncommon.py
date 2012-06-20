@@ -19,6 +19,8 @@ freely, subject to the following restrictions:
 
    3. This notice may not be removed or altered from any source
    distribution.
+
+#### MODIFIED BY Nick Lloyd
 """
 import sublime
 import sublime_plugin
@@ -73,6 +75,7 @@ class CompletionCommon(object):
 
     def completion_thread(self):
         try:
+            print "running proc"
             while True:
                 if self.completion_proc.poll() != None:
                     break
@@ -87,7 +90,11 @@ class CompletionCommon(object):
             print "no longer running"
 
     def run_completion(self, cmd, stdin=None):
+        print "run_completion w cmd: %s" % cmd
         realcmd = self.get_cmd()
+        print "self.completion_proc?: %s" % self.completion_proc
+        print "self.completion_cmd?: %s" % self.completion_cmd
+        print "self.completion_proc.poll()?: %s" % self.completion_proc.poll()
         if not self.completion_proc or realcmd != self.completion_cmd or self.completion_proc.poll() != None:
             if self.completion_proc:
                 if self.completion_proc.poll() == None:
@@ -118,6 +125,7 @@ class CompletionCommon(object):
                 stdout += read+"\n"
             except:
                 break
+        print "post-proc-init: %s" % stdout
         return stdout
 
     def get_language(self, view=None):
@@ -139,6 +147,7 @@ class CompletionCommon(object):
         return []
 
     def find_absolute_of_type(self, data, full_data, type, template_args=[]):
+        print "find_absolute_of_type: %s" % type
         thispackage = re.search("[ \t]*package (.*);", data)
         if thispackage is None:
             thispackage = ""
@@ -178,6 +187,7 @@ class CompletionCommon(object):
         return output
 
     def complete_class(self, absolute_classname, prefix, template_args=""):
+        print "complete_class: %s" % absolute_classname
         stdout = self.run_completion("-complete;;--;;%s;;--;;%s%s%s" % (absolute_classname, prefix, ";;--;;" if len(template_args) else "", template_args))
         stdout = stdout.split("\n")[:-1]
         members = [tuple(line.split(";;--;;")) for line in stdout]
@@ -259,6 +269,7 @@ class CompletionCommon(object):
         return ret
 
     def on_query_completions(self, view, prefix, locations):
+        print "on_query_completions: prefix::%s" % prefix
         bs = time.time()
         start = time.time()
         if not self.is_supported_language(view):

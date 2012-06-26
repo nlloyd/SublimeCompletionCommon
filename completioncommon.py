@@ -59,9 +59,11 @@ class CompletionCommon(object):
         self.workingdir = workingdir
 
     def get_settings(self):
+        print 'getting settings file: %s' % self.settingsfile
         return sublime.load_settings(self.settingsfile)
 
     def get_setting(self, key, default=None):
+        print 'getting setting: %s' % key
         try:
             s = sublime.active_window().active_view().settings()
             if s.has(key):
@@ -84,7 +86,7 @@ class CompletionCommon(object):
 
     def completion_thread(self):
         try:
-            print "running proc"
+            print "running completion_thread"
             while True:
                 if self.completion_proc.poll() != None:
                     break
@@ -92,11 +94,10 @@ class CompletionCommon(object):
                 if read:
                     self.data_queue.put(read)
         finally:
-            #print "completion_proc: %d" % (completion_proc.poll())
             self.data_queue.put(";;--;;")
             self.data_queue.put(";;--;;exit;;--;;")
             self.completion_cmd = None
-            print "no longer running"
+            print "completion_thread terminated"
 
     def run_completion(self, cmd, stdin=None):
         print "run_completion w cmd: %s" % cmd
@@ -111,6 +112,7 @@ class CompletionCommon(object):
                 while self.data_queue.get() != ";;--;;exit;;--;;":
                     continue
 
+            print 'starting a new completion_thread proc'
             self.completion_cmd = realcmd
             self.completion_proc = subprocess.Popen(
                 realcmd,
@@ -150,6 +152,7 @@ class CompletionCommon(object):
             if scope.endswith("jsp"):
                 return "jsp"
             return None
+        print 'get_language: %s' % language.group(0)
         return language.group(0)
 
     def is_supported_language(self, view):
@@ -199,7 +202,7 @@ class CompletionCommon(object):
         return output
 
     def complete_class(self, absolute_classname, prefix, template_args=""):
-        print "complete_class: %s" % absolute_classname
+        print "complete_class: %s, prefix: %s" % (absolute_classname, prefix)
         stdout = self.run_completion("-complete;;--;;%s;;--;;%s%s%s" % (absolute_classname, prefix, ";;--;;" if len(template_args) else "", template_args))
         stdout = stdout.split("\n")[:-1]
         members = [tuple(line.split(";;--;;")) for line in stdout]
@@ -212,6 +215,7 @@ class CompletionCommon(object):
         return sorted(ret, key=lambda a: a[0])
 
     def get_return_type(self, absolute_classname, prefix, template_args=""):
+        print 'get_return_type: %s, prefix: %s' % (absolute_classname, prefix)
         stdout = self.run_completion("-returntype;;--;;%s;;--;;%s%s%s" % (absolute_classname, prefix, ";;--;;" if len(template_args) else "", template_args))
         ret = stdout.strip()
         match = re.search("(\[L)?([^;]+)", ret)
@@ -220,6 +224,7 @@ class CompletionCommon(object):
         return ret
 
     def patch_up_template(self, data, full_data, template):
+        print 'patch_up_template: %s' % data
         if template == None:
             return None
         ret = []
@@ -246,6 +251,7 @@ class CompletionCommon(object):
         return (mod&(1<<3)) != 0
 
     def filter(self, typename, var, isstatic, data, indata):
+        print 'filter: typename=%s, var=%s, isstatic=%s' % (typename, var, isstatic)
         ret = []
         if len(indata) > 0 and len(indata[0]) == 2:
             # Filtering info not available
@@ -416,6 +422,7 @@ class CompletionCommon(object):
         return []
 
     def on_query_context(self, view, key, operator, operand, match_all):
+        print 'on_query_context: key=%s, operator=%s, operand=%s' % (key, operator, operand)
         if key == "completion_common.is_code":
             caret = view.sel()[0].a
             scope = view.scope_name(caret).strip()

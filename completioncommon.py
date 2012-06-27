@@ -102,9 +102,9 @@ class CompletionCommon(object):
     def run_completion(self, cmd, stdin=None):
         print "run_completion w cmd: %s" % cmd
         realcmd = self.get_cmd()
-        print "self.completion_proc?: %s" % self.completion_proc
-        print "self.completion_cmd?: %s" % self.completion_cmd
-        print "self.completion_proc.poll()?: %s" % self.completion_proc.poll()
+        # print "self.completion_proc?: %s" % self.completion_proc
+        # print "self.completion_cmd?: %s" % self.completion_cmd
+        # print "self.completion_proc.poll()?: %s" % self.completion_proc.poll()
         if not self.completion_proc or realcmd != self.completion_cmd or self.completion_proc.poll() != None:
             if self.completion_proc:
                 if self.completion_proc.poll() == None:
